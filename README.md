@@ -38,6 +38,17 @@ python -m fa serve                                 # 웹 화면 http://127.0.0.1
 pytest -q                                          # 테스트
 ```
 
+### 시연 단축 명령
+
+```bash
+./demo.sh          # 웹 화면 시작 + 브라우저 열기 (.env에 API 키가 있으면 Claude 모드)
+./demo.sh offline  # 오프라인 모드로 시작
+./demo.sh stop     # 종료
+./demo.sh reset    # 샘플 DB 다시 만들기
+```
+
+API 키는 폴더의 `.env` 파일에 `ANTHROPIC_API_KEY=sk-ant-...` 한 줄로 넣어 두면 됩니다(`.env`는 git에 올라가지 않음).
+
 Claude API를 쓰려면 `export ANTHROPIC_API_KEY=...` 후 실행합니다(모델은 `FA_MODEL`로 지정).
 키가 없으면 자동으로 오프라인 모드가 됩니다. `--llm offline`으로 강제할 수 있습니다.
 

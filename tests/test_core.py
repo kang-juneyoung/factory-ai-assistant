@@ -122,3 +122,18 @@ def test_web_api(db):
     r = c.post("/api/ask", json={"question": "설비별 불량률"}).json()
     assert r["rows"] and not r["error"]
     assert c.get("/api/report").json()["alerts"]
+
+
+class HonestLLM:
+    name = "honest"
+
+    def complete(self, system, user):
+        return "NO_DATA: 출근·인원 데이터는 DB에 없습니다"
+
+
+def test_no_data_answer_is_shown_not_substituted(db, tmp_path):
+    audit = tmp_path / "a.jsonl"
+    ans = ask_mod.ask("출근자 현황 보여줘", db, HonestLLM(), audit)
+    assert ans.error.startswith("데이터 없음")
+    assert ans.sql == "" and ans.rows == []
+    assert "데이터 없음" in audit.read_text(encoding="utf-8")

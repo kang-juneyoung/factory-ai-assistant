@@ -10,6 +10,10 @@ from . import sql_guard
 from .llm import LLM, SQL_SYSTEM
 
 
+class NoData(Exception):
+    """질문에 답할 데이터가 DB에 없음 — 비슷한 데이터로 억지로 답하지 않는다."""
+
+
 @dataclass
 class Answer:
     question: str
@@ -26,10 +30,15 @@ def ask(question: str, db_path: str | Path, llm: LLM, audit_path: str | Path | N
     ans = Answer(question=question, provider=llm.name)
     try:
         raw = llm.complete(SQL_SYSTEM, question)
+        if raw.strip().startswith("NO_DATA"):
+            reason = raw.strip().split(":", 1)[-1].strip()
+            raise NoData(reason or "이 질문에 답할 데이터가 없습니다")
         ans.sql = sql_guard.check(sql_guard.extract_sql(raw))
         ans.columns, ans.rows = sql_guard.run(db_path, ans.sql)
     except sql_guard.UnsafeSQL as e:
         ans.error = f"안전 검사에서 차단: {e}"
+    except NoData as e:
+        ans.error = f"데이터 없음: {e}"
     except LookupError as e:
         ans.error = str(e)
     except Exception as e:  # DB 오류 등은 사용자에게 그대로 보여 준다
